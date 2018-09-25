@@ -110,6 +110,51 @@ function toggleFullScreen() {
   isFullScreen() ? doc.exitFullscreen() : docElem.requestFullscreen();
 }
 
+// scroll wheel implementation taken from
+// https://jsfiddle.net/rafaylik/sLjyyfox/
+var marker = true,
+    delta,
+    direction,
+    interval = 50,
+    counter1 = 0,
+    counter2;
+
+function wheel(e){
+  counter1 += 1;
+  e = e||window.event;
+  delta = e.deltaY||e.detail||e.wheelDelta;
+  if (delta>0) {direction = 'up';} else {direction = 'down';}
+  if (marker) wheelStart();
+  return false;
+}
+function wheelStart(){
+  marker = false;
+  wheelAct();
+}
+function wheelAct(){
+  counter2 = counter1;
+  setTimeout(function(){
+    if (counter2 == counter1) {
+      wheelEnd();
+    } else {
+      wheelAct();
+    }
+
+    if(Math.abs(delta) > 15) {
+      if(direction == 'up') {
+        navigate(-1);
+      } else if(direction == 'down') {
+        navigate(1);
+      }
+    }
+  },interval);
+}
+function wheelEnd(){
+  marker = true,
+  counter1 = 0,
+  counter2 = 0;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   // Update the tabindex to prevent weird slide transitioning
   updateTabIndex();
@@ -146,4 +191,11 @@ document.addEventListener('DOMContentLoaded', function () {
       navigate(-1);
     };
   }
+
+  if (document.addEventListener) {
+    if ('onwheel' in document)            document.addEventListener('wheel',wheel);
+    else if ('onmousewheel' in document)  document.addEventListener('mousewheel',wheel);
+    else                                  document.addEventListener('MozMousePixelScroll',wheel);
+  } else                                  document.attachEvent('onmousewheel',wheel);
+
 });
